@@ -1,0 +1,307 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sólidos 3D · Sesión 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: barra superior con los ejercicios; debajo, visor 3D grande + panel de lectura (enunciado, límites, flecha). */
+:root{
+  --bg:#F5F6F9; --panel:#FFFFFF; --ink:#141A33; --muted:#5B6280; --line:#D9DCE6;
+  --rojo:#A60311; --azul:#060E3B; --flecha:#D9822B; --chip:#ECEEF5; --stage:#FBFBFD;
+  --sans:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1022; --panel:#141A33; --ink:#E8EAF3; --muted:#A3A9C4; --line:#2A3152;
+  --rojo:#E0485A; --azul:#8FA2FF; --flecha:#F2A65A; --chip:#1D2443; --stage:#0F1430; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1022; --panel:#141A33; --ink:#E8EAF3; --muted:#A3A9C4; --line:#2A3152;
+  --rojo:#E0485A; --azul:#8FA2FF; --flecha:#F2A65A; --chip:#1D2443; --stage:#0F1430; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;padding-inline:16px;padding-block:12px}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+header h1{font-size:1.35rem;margin:0;letter-spacing:.01em;text-wrap:balance}
+header h1 span{color:var(--rojo)}
+header p{margin:0;color:var(--muted);font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--mono);padding:6px 10px;border-radius:6px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--rojo);border-color:var(--rojo);color:#fff}
+.chip:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--flecha);outline-offset:2px}
+.main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:12px}
+@media (max-width:860px){.main{grid-template-columns:1fr}}
+.stage{position:relative;background:var(--stage);border:1px solid var(--line);border-radius:10px;min-height:420px;aspect-ratio:4/3;max-width:100%;overflow:hidden}
+.stage canvas{display:block;width:100%;height:100%}
+.hint{position:absolute;left:10px;bottom:8px;font-size:.78rem;color:var(--muted);pointer-events:none}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.side h2{margin:0;font-size:1.1rem;color:var(--rojo)}
+.label{font:600 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.box{min-width:0;overflow-x:auto}
+.res{font-weight:700}
+.controls{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button.ctl{font:600 .85rem var(--sans);padding:7px 12px;border-radius:6px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+button.ctl[aria-pressed="true"]{border-color:var(--flecha);box-shadow:inset 0 0 0 1px var(--flecha)}
+input[type=range]{flex:1;min-width:140px;accent-color:var(--flecha)}
+.val{font:600 .85rem var(--mono);min-width:7ch;text-align:right;font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.8rem;color:var(--muted)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+mjx-container{max-width:100%}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Sólidos 3D <span>·</span> Integrales triples</h1>
+    <p>Cálculo Vectorial · Sesión 8 · Ejemplos de clase. Arrastra para girar, rueda para acercar.</p>
+  </header>
+  <nav class="chips" id="chips" aria-label="Ejemplos"></nav>
+  <div class="main">
+    <div class="stage" id="stage"><div class="hint">Mueve el barrido: cada flecha naranja recorre la variable interior, del límite inferior al superior.</div></div>
+    <aside class="side">
+      <h2 id="titulo"></h2>
+      <div><div class="label">Enunciado</div><div class="box" id="enun"></div></div>
+      <div class="row" id="ordenes"></div>
+      <div><div class="label">Límites de integración</div><div class="box" id="lims"></div></div>
+      <div><div class="label">La flecha</div><div id="flecha"></div></div>
+      <div><div class="label">Resultado</div><div class="box res" id="res"></div></div>
+      <div class="controls">
+        <div class="row"><span class="label" id="barlab">Barrido</span>
+          <input type="range" id="barrido" min="0" max="1000" value="1000" aria-label="Barrido de la variable exterior">
+          <span class="val" id="barval"></span></div>
+        <div class="row">
+          <button class="ctl" id="play" aria-pressed="false">▶ Animar llenado</button>
+          <button class="ctl" id="rot" aria-pressed="false">Girar</button>
+          <button class="ctl" id="sup" aria-pressed="true">Superficies</button>
+          <button class="ctl" id="vista">Vista inicial</button>
+        </div>
+        <div class="legend"><span><i class="sw" style="background:var(--rojo)"></i>Límite superior (sale)</span>
+          <span><i class="sw" style="background:var(--azul)"></i>Límite inferior (entra)</span>
+          <span><i class="sw" style="background:var(--flecha)"></i>Flecha de la variable interior</span></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+window.MathJax={tex:{inlineMath:[["\\(","\\)"]]},svg:{fontCache:"global"},startup:{typeset:false}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const PI=Math.PI, S=Math.sin, C=Math.cos, SQ=Math.sqrt, E2=Math.exp(2), L=SQ(PI/2);
+const cyl=(t,r,z)=>[r*C(t),r*S(t),z], esf=(t,f,p)=>[p*S(f)*C(t),p*S(f)*S(t),p*C(f)];
+
+/* Cada orden: o (exterior) [a,b]; m (medio) [m1(o),m2(o)]; i (interior) [i1(o,m),i2(o,m)]; map -> [x,y,z] */
+const EJ=[
+ {id:"1",t:"Ejemplo 1",enun:"\\(\\displaystyle\\int_1^4\\int_1^{e^2}\\int_0^{1/(xz)}\\ln z\\,dy\\,dz\\,dx\\)",res:"\\(\\ln 16\\approx 2{,}773\\) (no es volumen)",
+  esc:[1,3,0.45],ord:[{n:"dy dz dx",o:"x",a:1,b:4,m1:o=>1,m2:o=>E2,i1:()=>0,i2:(o,m)=>1/(o*m),map:(o,m,i)=>[o,i,m],
+   lim:"\\(0\\le y\\le \\tfrac{1}{xz},\\quad 1\\le z\\le e^2,\\quad 1\\le x\\le 4\\)",fl:"Paralela al eje y: entra por y = 0 y sale por la superficie y = 1/(xz)."}]},
+ {id:"2a",t:"Ejemplo 2 (a)",enun:"\\(\\displaystyle\\iiint_Q z\\,dV\\), tetraedro \\(x=0,\\ y=0,\\ z=0,\\ x+y+z=1\\)",res:"\\(\\tfrac{1}{24}\\)",
+  esc:[1,1,1],ord:[{n:"dz dy dx",o:"x",a:0,b:1,m1:()=>0,m2:o=>1-o,i1:()=>0,i2:(o,m)=>1-o-m,map:(o,m,i)=>[o,m,i],
+   lim:"\\(0\\le z\\le 1-x-y,\\quad 0\\le y\\le 1-x,\\quad 0\\le x\\le 1\\)",fl:"Vertical: entra por el piso z = 0 y sale por el plano z = 1 − x − y."}]},
+ {id:"2b",t:"Ejemplo 2 (b)",enun:"\\(\\displaystyle\\iiint_Q \\frac{1}{(1+x+y+z)^3}\\,dV\\), mismo tetraedro",res:"\\(\\tfrac12\\ln 2-\\tfrac{5}{16}\\approx 0{,}0341\\)",
+  esc:[1,1,1],ord:[{n:"dz dy dx",o:"x",a:0,b:1,m1:()=>0,m2:o=>1-o,i1:()=>0,i2:(o,m)=>1-o-m,map:(o,m,i)=>[o,m,i],
+   lim:"\\(0\\le z\\le 1-x-y,\\quad 0\\le y\\le 1-x,\\quad 0\\le x\\le 1\\)",fl:"La región es la misma que en 2 (a): solo cambia la función que se integra."}]},
+ {id:"3a",t:"Ejemplo 3 (a)",enun:"\\(\\displaystyle\\int_0^{\\sqrt{\\pi/2}}\\int_x^{\\sqrt{\\pi/2}}\\int_1^3 \\operatorname{sen}(y^2)\\,dz\\,dy\\,dx\\)",res:"\\(1\\)",
+  esc:[1,1,0.6],ord:[
+   {n:"Original (dy dx)",o:"x",a:0,b:L,m1:o=>o,m2:()=>L,i1:()=>1,i2:()=>3,map:(o,m,i)=>[o,m,i],
+    lim:"\\(1\\le z\\le 3,\\quad x\\le y\\le \\sqrt{\\pi/2},\\quad 0\\le x\\le\\sqrt{\\pi/2}\\)",fl:"El barrido avanza en x; en cada x, y va de la recta y = x hasta y = √(π/2). Así queda ∫sen(y²)dy, que no es elemental."},
+   {n:"Nuevo (dx dy)",o:"y",a:0,b:L,m1:()=>0,m2:o=>o,i1:()=>1,i2:()=>3,map:(o,m,i)=>[m,o,i],
+    lim:"\\(1\\le z\\le 3,\\quad 0\\le x\\le y,\\quad 0\\le y\\le\\sqrt{\\pi/2}\\)",fl:"Ahora el barrido avanza en y; en cada y, x entra por x = 0 y sale por x = y."}]},
+ {id:"3b",t:"Ejemplo 3 (b)",enun:"\\(\\displaystyle\\int_0^{1}\\int_{2x}^{2}\\int_0^3 e^{y^2}\\,dz\\,dy\\,dx\\)",res:"\\(\\tfrac34(e^4-1)\\approx 40{,}20\\)",
+  esc:[1,1,0.6],ord:[
+   {n:"Original (dy dx)",o:"x",a:0,b:1,m1:o=>2*o,m2:()=>2,i1:()=>0,i2:()=>3,map:(o,m,i)=>[o,m,i],
+    lim:"\\(0\\le z\\le 3,\\quad 2x\\le y\\le 2,\\quad 0\\le x\\le 1\\)",fl:"Flecha vertical en el plano xy: entra por y = 2x y sale por y = 2."},
+   {n:"Nuevo (dx dy)",o:"y",a:0,b:2,m1:()=>0,m2:o=>o/2,i1:()=>0,i2:()=>3,map:(o,m,i)=>[m,o,i],
+    lim:"\\(0\\le z\\le 3,\\quad 0\\le x\\le \\tfrac y2,\\quad 0\\le y\\le 2\\)",fl:"Flecha horizontal: entra por x = 0 y sale por x = y/2."}]},
+ {id:"4",t:"Ejemplo 4",enun:"\\(\\displaystyle\\int_0^1\\int_y^1\\int_0^{\\sqrt{1-y^2}}dz\\,dx\\,dy\\) → reescribir en \\(dz\\,dy\\,dx\\)",res:"\\(\\displaystyle\\int_0^1\\int_0^x\\int_0^{\\sqrt{1-y^2}}dz\\,dy\\,dx\\)",
+  esc:[1,1,1],ord:[
+   {n:"Original (dx dy)",o:"y",a:0,b:1,m1:o=>o,m2:()=>1,i1:()=>0,i2:(o,m)=>SQ(Math.max(0,1-o*o)),map:(o,m,i)=>[m,o,i],
+    lim:"\\(0\\le z\\le\\sqrt{1-y^2},\\quad y\\le x\\le 1,\\quad 0\\le y\\le 1\\)",fl:"El barrido avanza en y; en cada y, x va de x = y a x = 1. Techo: cilindro y² + z² = 1."},
+   {n:"Nuevo (dy dx)",o:"x",a:0,b:1,m1:()=>0,m2:o=>o,i1:()=>0,i2:(o,m)=>SQ(Math.max(0,1-m*m)),map:(o,m,i)=>[o,m,i],
+    lim:"\\(0\\le z\\le\\sqrt{1-y^2},\\quad 0\\le y\\le x,\\quad 0\\le x\\le 1\\)",fl:"El barrido avanza en x; en cada x, y entra por y = 0 y sale por y = x."}]},
+ {id:"5",t:"Ejemplo 5",enun:"Volumen bajo \\(z=1-y^2\\) entre \\(x+y=1\\) y \\(x+y=3\\), primer octante",res:"\\(V=\\tfrac43\\)",
+  esc:[1,1,1],ord:[{n:"dz dx dy",o:"y",a:0,b:1,m1:o=>1-o,m2:o=>3-o,i1:()=>0,i2:(o,m)=>1-o*o,map:(o,m,i)=>[m,o,i],
+   lim:"\\(0\\le z\\le 1-y^2,\\quad 1-y\\le x\\le 3-y,\\quad 0\\le y\\le 1\\)",fl:"Vertical: entra por z = 0 y sale por el cilindro z = 1 − y²."}]},
+ {id:"6",t:"Ejemplo 6",enun:"Volumen bajo \\(z=5-x-y\\) en el primer octante",res:"\\(V=\\tfrac{125}{6}\\approx 20{,}83\\)",
+  esc:[0.4,0.4,0.4],ord:[{n:"dz dy dx",o:"x",a:0,b:5,m1:()=>0,m2:o=>5-o,i1:()=>0,i2:(o,m)=>5-o-m,map:(o,m,i)=>[o,m,i],
+   lim:"\\(0\\le z\\le 5-x-y,\\quad 0\\le y\\le 5-x,\\quad 0\\le x\\le 5\\)",fl:"Vertical: entra por z = 0 y sale por el plano z = 5 − x − y."}]},
+ {id:"7",t:"Ejemplo 7",enun:"\\(\\displaystyle\\int_{-2}^{2}\\int_{-\\sqrt{4-x^2}}^{\\sqrt{4-x^2}}\\int_{\\sqrt{x^2+y^2}}^{2}(x^2+y^2)\\,dz\\,dy\\,dx\\)",res:"\\(\\tfrac{16\\pi}{5}\\approx 10{,}05\\)",
+  esc:[0.5,0.5,0.5],ord:[{n:"Cilíndricas",o:"θ",a:0,b:2*PI,m1:()=>0,m2:()=>2,i1:(o,m)=>m,i2:()=>2,map:cyl,
+   lim:"\\(r\\le z\\le 2,\\quad 0\\le r\\le 2,\\quad 0\\le\\theta\\le 2\\pi\\)",fl:"Vertical: entra por el cono z = r y sale por el plano z = 2. El barrido gira en θ."}]},
+ {id:"8",t:"Ejemplo 8",enun:"\\(\\displaystyle\\iiint_Q\\sqrt{x^2+y^2}\\,dV\\), dentro de \\(x^2+y^2=9\\), entre \\(z=-2\\) y \\(z=3\\)",res:"\\(90\\pi\\approx 282{,}7\\)",
+  esc:[0.35,0.35,0.35],ord:[{n:"Cilíndricas",o:"θ",a:0,b:2*PI,m1:()=>0,m2:()=>3,i1:()=>-2,i2:()=>3,map:cyl,
+   lim:"\\(-2\\le z\\le 3,\\quad 0\\le r\\le 3,\\quad 0\\le\\theta\\le 2\\pi\\)",fl:"Vertical: entra por z = −2 y sale por z = 3. Todos los límites son constantes."}]},
+ {id:"9",t:"Ejemplo 9",enun:"\\(\\displaystyle\\int_0^2\\int_0^{\\sqrt{4-x^2}}\\int_0^{\\sqrt{16-x^2-y^2}}\\sqrt{x^2+y^2}\\,dz\\,dy\\,dx\\)",res:"\\(\\tfrac{8\\pi^2}{3}-2\\sqrt3\\,\\pi\\approx 15{,}44\\)",
+  esc:[0.4,0.4,0.4],ord:[
+   {n:"Cilíndricas",o:"θ",a:0,b:PI/2,m1:()=>0,m2:()=>2,i1:()=>0,i2:(o,m)=>SQ(16-m*m),map:cyl,
+    lim:"\\(0\\le z\\le\\sqrt{16-r^2},\\quad 0\\le r\\le 2,\\quad 0\\le\\theta\\le\\tfrac{\\pi}{2}\\)",fl:"Vertical: entra por z = 0 y sale por la esfera de radio 4. Una sola región: es la más sencilla."},
+   {n:"Esféricas",o:"θ",a:0,b:PI/2,m1:()=>0,m2:()=>PI/2,i1:()=>0,i2:(o,m)=>Math.min(4,2/Math.max(S(m),1e-6)),map:esf,
+    lim:"\\(0\\le\\rho\\le 4\\ \\ (0\\le\\phi\\le\\tfrac{\\pi}{6});\\quad 0\\le\\rho\\le 2\\csc\\phi\\ \\ (\\tfrac{\\pi}{6}\\le\\phi\\le\\tfrac{\\pi}{2})\\)",fl:"Rayo desde el origen: sale por la esfera ρ = 4 si φ ≤ π/6, o por el cilindro ρ = 2 csc φ si φ ≥ π/6. Dos regiones."}]},
+ {id:"10",t:"Ejemplo 10",enun:"\\(\\displaystyle\\iiint_E\\frac{1}{x^2+y^2+z^2}\\,dV\\), entre las esferas de radio 2 y 5, primer octante",res:"\\(\\tfrac{3\\pi}{2}\\approx 4{,}712\\)",
+  esc:[0.32,0.32,0.32],ord:[{n:"Esféricas",o:"θ",a:0,b:PI/2,m1:()=>0,m2:()=>PI/2,i1:()=>2,i2:()=>5,map:esf,
+   lim:"\\(2\\le\\rho\\le 5,\\quad 0\\le\\phi\\le\\tfrac{\\pi}{2},\\quad 0\\le\\theta\\le\\tfrac{\\pi}{2}\\)",fl:"Rayo desde el origen: entra por la esfera ρ = 2 y sale por la esfera ρ = 5."}]},
+ {id:"11",t:"Ejemplo 11",enun:"\\(\\displaystyle\\int_0^{2\\pi}\\int_{\\pi/6}^{\\pi/2}\\int_0^4\\rho^2\\operatorname{sen}\\phi\\,d\\rho\\,d\\phi\\,d\\theta\\)",res:"\\(V=\\tfrac{64\\sqrt3\\,\\pi}{3}\\approx 116{,}08\\)",
+  esc:[0.4,0.4,0.4],ord:[{n:"Esféricas",o:"θ",a:0,b:2*PI,m1:()=>PI/6,m2:()=>PI/2,i1:()=>0,i2:()=>4,map:esf,
+   lim:"\\(0\\le\\rho\\le 4,\\quad \\tfrac{\\pi}{6}\\le\\phi\\le\\tfrac{\\pi}{2},\\quad 0\\le\\theta\\le 2\\pi\\)",fl:"Rayo desde el origen hasta la esfera ρ = 4; φ empieza en el cono π/6, así que el cono central queda vacío."}]}
+];
+
+/* ---------- escena ---------- */
+const stage=document.getElementById('stage');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+stage.prepend(renderer.domElement);
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(40,4/3,0.01,100); cam.up.set(0,0,1);
+const ctr=new THREE.OrbitControls(cam,renderer.domElement); ctr.enableDamping=true;
+scene.add(new THREE.AmbientLight(0xffffff,0.75));
+const dl=new THREE.DirectionalLight(0xffffff,0.55); dl.position.set(3,-2,5); scene.add(dl);
+let root=new THREE.Group(); scene.add(root);
+
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(stage);
+
+function textSprite(txt,color,size=0.16){
+  const c=document.createElement('canvas'),g=c.getContext('2d'),f=64;
+  g.font=`600 ${f}px JetBrains Mono, monospace`;const w=Math.ceil(g.measureText(txt).width)+16;
+  c.width=w;c.height=f+20;g.font=`600 ${f}px JetBrains Mono, monospace`;g.fillStyle=color;g.textBaseline='middle';g.fillText(txt,8,c.height/2);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));
+  sp.scale.set(size*w/c.height,size,1);return sp;
+}
+function surface(fn,nu,nv,color,op){
+  const pos=[],idx=[];
+  for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){pos.push(...fn(i/nu,j/nv));}
+  for(let j=0;j<nv;j++)for(let i=0;i<nu;i++){const a=j*(nu+1)+i,b=a+1,c2=a+nu+1,d=c2+1;idx.push(a,b,d,a,d,c2);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
+  return new THREE.Mesh(g,new THREE.MeshPhongMaterial({color,transparent:true,opacity:op,side:THREE.DoubleSide,depthWrite:false,shininess:30}));
+}
+function curve(fn,n,color){
+  const p=[];for(let k=0;k<=n;k++)p.push(new THREE.Vector3(...fn(k/n)));
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),new THREE.LineBasicMaterial({color,transparent:true,opacity:0.8}));
+}
+
+let cur={e:0,o:0}, arrows=[], surfGroup=null, bbox=null;
+function build(){
+  scene.remove(root);root=new THREE.Group();scene.add(root);
+  const ej=EJ[cur.e],od=ej.ord[cur.o],[sx,sy,sz]=ej.esc;
+  root.scale.set(sx,sy,sz);
+  const P=(o,m,i)=>od.map(o,m,i);
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const at=(u,v,w)=>{const o=lerp(od.a,od.b,u),m=lerp(od.m1(o),od.m2(o),v),i=lerp(od.i1(o,m),od.i2(o,m),w);return P(o,m,i);};
+  const cR=new THREE.Color(css('--rojo')),cA=new THREE.Color(css('--azul')),cW=new THREE.Color(css('--muted')),cF=new THREE.Color(css('--flecha'));
+  surfGroup=new THREE.Group();root.add(surfGroup);
+  const N=48;
+  surfGroup.add(surface((u,v)=>at(u,v,1),N,N,cR,0.38));       // sale (techo)
+  surfGroup.add(surface((u,v)=>at(u,v,0),N,N,cA,0.30));       // entra (piso)
+  surfGroup.add(surface((v,w)=>at(0,v,w),N,12,cW,0.16));
+  surfGroup.add(surface((v,w)=>at(1,v,w),N,12,cW,0.16));
+  surfGroup.add(surface((u,w)=>at(u,0,w),N,12,cW,0.16));
+  surfGroup.add(surface((u,w)=>at(u,1,w),N,12,cW,0.16));
+  for(const [u,v] of [[0,0],[0,1],[1,0],[1,1]]) surfGroup.add(curve(t=>at(u,v,t),12,cW));
+  for(const w of [0,1]){surfGroup.add(curve(t=>at(t,0,w),60,w?cR:cA));surfGroup.add(curve(t=>at(t,1,w),60,w?cR:cA));
+    surfGroup.add(curve(t=>at(0,t,w),60,w?cR:cA));surfGroup.add(curve(t=>at(1,t,w),60,w?cR:cA));}
+  surfGroup.visible=document.getElementById('sup').getAttribute('aria-pressed')==='true';
+  // flechas (variable interior) en una malla del dominio exterior/medio
+  arrows=[];const NO=16,NM=9;
+  const shaft=new THREE.CylinderGeometry(1,1,1,6),head=new THREE.ConeGeometry(1,1,10);
+  const matA=new THREE.MeshPhongMaterial({color:cF}),matB=new THREE.MeshPhongMaterial({color:cF,transparent:true,opacity:0.45});
+  const tmp=new THREE.Vector3(),up=new THREE.Vector3(0,1,0);
+  const sc=new THREE.Vector3(1/sx,1/sy,1/sz); // grosor uniforme en pantalla pese a la escala del grupo
+  for(let a=0;a<NO;a++){const u=(a+0.5)/NO;
+    for(let b=0;b<NM;b++){const v=(b+0.5)/NM;
+      const p0=new THREE.Vector3(...at(u,v,0)),p1=new THREE.Vector3(...at(u,v,1));
+      const d0=p0.clone().multiply(new THREE.Vector3(sx,sy,sz)),d1=p1.clone().multiply(new THREE.Vector3(sx,sy,sz));
+      const len=d1.distanceTo(d0); if(len<1e-4) continue;
+      const g=new THREE.Group(); // en coordenadas de mundo (fuera del grupo escalado)
+      const dir=d1.clone().sub(d0).normalize(), q=new THREE.Quaternion().setFromUnitVectors(up,dir);
+      const hl=Math.min(0.09,len*0.35), r=0.012;
+      const s=new THREE.Mesh(shaft,matA);s.scale.set(r,len-hl,r);s.position.copy(d0).addScaledVector(dir,(len-hl)/2);s.quaternion.copy(q);
+      const h=new THREE.Mesh(head,matA);h.scale.set(r*3.2,hl,r*3.2);h.position.copy(d0).addScaledVector(dir,len-hl/2);h.quaternion.copy(q);
+      g.add(s,h);scene.add(g);arrows.push({g,u,s,h,matA,matB});
+    }}
+  root.userData.arrowsRoot=true;
+  // ejes en coordenadas reales (escalados con el grupo)
+  root.updateMatrixWorld(true);
+  bbox=new THREE.Box3().setFromObject(surfGroup);
+  const mn=bbox.min,mx=bbox.max;
+  const axLen=[Math.max(mx.x,0.5)+0.35,Math.max(mx.y,0.5)+0.35,Math.max(mx.z,0.5)+0.35];
+  const axMin=[Math.min(mn.x,0),Math.min(mn.y,0),Math.min(mn.z,0)];
+  const ink=css('--ink');
+  ['x','y','z'].forEach((n,k)=>{
+    const a=[0,0,0],b=[0,0,0];a[k]=axMin[k]-0.15;b[k]=axLen[k];
+    const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...a),new THREE.Vector3(...b)]),new THREE.LineBasicMaterial({color:ink}));
+    scene.add(ln);arrows.push({axis:ln});
+    const lab=textSprite(n,ink,0.22);lab.position.set(...b.map((c,i)=>i===k?c+0.08:c));scene.add(lab);arrows.push({axis:lab});
+    const sc3=[sx,sy,sz][k],real=[mx.x,mx.y,mx.z][k]/sc3;
+    if(real>0.05){const t=[0,0,0];t[k]=[mx.x,mx.y,mx.z][k];const tk=textSprite(fmt(real),css('--muted'),0.15);tk.position.set(...t.map((c,i)=>i===k?c:c-0.08));scene.add(tk);arrows.push({axis:tk});}
+  });
+  // cámara
+  const cen=bbox.getCenter(new THREE.Vector3()),size=bbox.getSize(new THREE.Vector3()).length();
+  ctr.target.copy(cen);homePos=cen.clone().add(new THREE.Vector3(1.25,-1.55,0.95).multiplyScalar(size*0.62+0.3));
+  cam.position.copy(homePos);ctr.update();
+  setSweep(+document.getElementById('barrido').value/1000);
+}
+let homePos=new THREE.Vector3(3,-3,2);
+function clearWorld(){for(const a of arrows){scene.remove(a.g||a.axis);} arrows=[];}
+function fmt(v){const r=Math.round(v*100)/100;return (Number.isInteger(r)?r.toString():r.toFixed(2)).replace('.',',');}
+function setSweep(s){
+  const ej=EJ[cur.e],od=ej.ord[cur.o],k=1/16;
+  for(const a of arrows){if(!a.g)continue;
+    const on=a.u<=s+1e-9; a.g.visible=on;
+    const front=on && s-a.u<k; a.s.material=a.h.material=front?a.matA:a.matB;}
+  const val=od.a+(od.b-od.a)*s;
+  document.getElementById('barlab').textContent=`Barrido en ${od.o}`;
+  document.getElementById('barval').textContent=`${od.o} = ${od.o==='θ'?fmtAng(val):fmt(val)}`;
+}
+function fmtAng(v){const f=v/PI;const m={0:'0',0.5:'π/2',1:'π',1.5:'3π/2',2:'2π'};const r=Math.round(f*100)/100;return m[r]!==undefined?m[r]:(r.toFixed(2).replace('.',',')+'π');}
+
+/* ---------- panel ---------- */
+const chips=document.getElementById('chips');
+EJ.forEach((e,i)=>{const b=document.createElement('button');b.className='chip';b.id='ej-'+e.id;b.textContent=e.id;b.title=e.t;
+  b.setAttribute('aria-pressed',i===0);b.onclick=()=>select(i,0);chips.appendChild(b);});
+function typeset(els){if(window.MathJax&&MathJax.typesetPromise){MathJax.typesetClear&&MathJax.typesetClear(els);MathJax.typesetPromise(els).catch(()=>{});}}
+function select(i,o){
+  cur={e:i,o};clearWorld();
+  [...chips.children].forEach((c,k)=>c.setAttribute('aria-pressed',k===i));
+  const ej=EJ[i],od=ej.ord[o];
+  document.getElementById('titulo').textContent=ej.t;
+  document.getElementById('enun').innerHTML=ej.enun;
+  document.getElementById('lims').innerHTML=od.lim;
+  document.getElementById('flecha').textContent=od.fl;
+  document.getElementById('res').innerHTML=ej.res;
+  const ow=document.getElementById('ordenes');ow.innerHTML='';
+  if(ej.ord.length>1){ej.ord.forEach((d,k)=>{const b=document.createElement('button');b.className='ctl';b.id='ord-'+k;b.textContent=d.n;
+    b.setAttribute('aria-pressed',k===o);b.onclick=()=>select(i,k);ow.appendChild(b);});}
+  else{const s=document.createElement('span');s.className='label';s.textContent='Orden: '+od.n;ow.appendChild(s);}
+  typeset([document.querySelector('.side')]);
+  build();
+  try{localStorage.setItem('s8-ej',ej.id);}catch(e){}
+}
+const bar=document.getElementById('barrido');
+bar.oninput=()=>{stopPlay();setSweep(bar.value/1000);};
+let playing=false,last=0;
+const playBtn=document.getElementById('play');
+function stopPlay(){playing=false;playBtn.setAttribute('aria-pressed','false');playBtn.textContent='▶ Animar llenado';}
+playBtn.onclick=()=>{if(playing){stopPlay();return;}playing=true;playBtn.setAttribute('aria-pressed','true');playBtn.textContent='❚❚ Pausar';if(+bar.value>=1000)bar.value=0;last=performance.now();};
+const rotBtn=document.getElementById('rot');
+rotBtn.onclick=()=>{const on=rotBtn.getAttribute('aria-pressed')!=='true';rotBtn.setAttribute('aria-pressed',on);ctr.autoRotate=on;ctr.autoRotateSpeed=1.2;};
+const supBtn=document.getElementById('sup');
+supBtn.onclick=()=>{const on=supBtn.getAttribute('aria-pressed')!=='true';supBtn.setAttribute('aria-pressed',on);if(surfGroup)surfGroup.visible=on;};
+document.getElementById('vista').onclick=()=>{cam.position.copy(homePos);ctr.update();};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function loop(t){
+  requestAnimationFrame(loop);
+  if(playing){const dt=t-last;last=t;let v=+bar.value+dt*(reduce?1000:0.22);if(v>=1000){v=1000;stopPlay();}bar.value=v;setSweep(v/1000);}
+  ctr.update();renderer.setClearColor(new THREE.Color(css('--stage')));renderer.render(scene,cam);
+}
+resize();
+let start=0;try{const s=localStorage.getItem('s8-ej');const k=EJ.findIndex(e=>e.id===s);if(k>=0)start=k;}catch(e){}
+const hash=location.hash.replace('#','');{const k=EJ.findIndex(e=>'ej'+e.id===hash);if(k>=0)start=k;}
+select(start,0);
+requestAnimationFrame(loop);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>select(cur.e,cur.o));
+</script>
+
+</body></html>
